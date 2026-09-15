@@ -1,4 +1,4 @@
-#include "Registry.h"
+#include "registry.h"
 
 bool Registry::exists(HKEY root, const std::string& path) {
     HKEY key;
@@ -77,4 +77,51 @@ bool Registry::setDWORD(HKEY root, const std::string& path, const std::string& n
 
 bool Registry::remove(HKEY root, const std::string& path) {
     return RegDeleteTreeA(root, path.c_str()) == ERROR_SUCCESS;
+}
+
+std::vector<std::string> Registry::getSubKeys(HKEY root, const std::string& path) {
+    std::vector<std::string> keys;
+
+    HKEY hKey;
+
+    if (RegOpenKeyExA(
+            root,
+            path.c_str(),
+            0,
+            KEY_READ,
+            &hKey) != ERROR_SUCCESS) {
+        return keys;
+    }
+
+    DWORD index = 0;
+    char name[256];
+    DWORD nameSize;
+
+    while (true) {
+        nameSize = sizeof(name);
+
+        LONG result = RegEnumKeyExA(
+            hKey,
+            index,
+            name,
+            &nameSize,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr
+        );
+
+        if (result == ERROR_NO_MORE_ITEMS)
+            break;
+
+        if (result == ERROR_SUCCESS) {
+            keys.emplace_back(name, nameSize);
+        }
+
+        ++index;
+    }
+
+    RegCloseKey(hKey);
+
+    return keys;
 }

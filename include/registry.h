@@ -1,9 +1,9 @@
 #pragma once
 
+#include <vector>
 #include <windows.h>
 #include <string>
 #include <optional>
-
 
 class Registry {
 public:
@@ -31,6 +31,9 @@ public:
 
     // 删除 Key（包括子项）
     static bool remove(HKEY root, const std::string& path);
+
+    // 列出子项
+    static std::vector<std::string> getSubKeys(HKEY root, const std::string& path);
 
     // Shell 目录
     inline static const char* SHELL_PATH = R"(Software\Classes\*\shell)";

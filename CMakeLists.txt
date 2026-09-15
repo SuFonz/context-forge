@@ -22,6 +22,7 @@ add_library(ContextForgeCOM SHARED
 
 # include directories
 target_include_directories(ContextForge PRIVATE include)
+target_include_directories(ContextForgeCOM PRIVATE include)
 
 include(FetchContent)
 
