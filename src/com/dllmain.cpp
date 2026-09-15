@@ -70,7 +70,7 @@ private:
 #endif
 
 extern "C" HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID riid, void** ppv) {
-    if (!IsEqualCLSID(clsid, CLSID_Command))
+    if (!IsEqualCLSID(clsid, PROJECT_CLSID))
         return CLASS_E_CLASSNOTAVAILABLE;
 
     ClassFactory* factory = new ClassFactory();

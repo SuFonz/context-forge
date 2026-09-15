@@ -5,7 +5,7 @@
 #include <windows.h>
 #include "utils.h"
 
-std::string Gen::randomString(size_t length) {
+std::string Gen::random_string(size_t length) {
     const char chars[] = 
         "0123456789"
         "abcdefghijklmnopqrstuvwxyz"
@@ -27,7 +27,7 @@ std::string Gen::randomString(size_t length) {
     return result;
 }
 
-std::string randomGuid() {
+std::string Gen::random_guid() {
     GUID guid;
 
     if (FAILED(CoCreateGuid(&guid)))

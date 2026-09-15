@@ -2,6 +2,7 @@
 #include <windows.h>
 
 const std::string PROJECT_NAME = "ContextForge";
+const std::string PROJECT_APPX_PACKAGE_NAME = "00000000-1111-2222-3333-444444444444";
 inline const GUID PROJECT_CLSID = {
     0x12345678,
     0x1234,

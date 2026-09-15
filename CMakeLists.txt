@@ -53,6 +53,7 @@ target_link_libraries(
     CLI11::CLI11 
     nlohmann_json::nlohmann_json
     Rpcrt4
+    windowsapp
 )
 
 
