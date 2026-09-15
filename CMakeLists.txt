@@ -18,6 +18,7 @@ add_executable(
 add_library(ContextForgeCOM SHARED
     src/com/command.hpp
     src/com/dllmain.cpp
+    src/components/win11_menu.cpp
 )
 
 # include directories
@@ -56,6 +57,11 @@ target_link_libraries(
     windowsapp
 )
 
+target_link_libraries(
+    ContextForgeCOM
+    PRIVATE
+    nlohmann_json::nlohmann_json
+)
 
 set_target_properties(ContextForge PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"

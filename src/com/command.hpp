@@ -7,8 +7,29 @@
 #include <string>
 #include <vector>
 #include "defs.h"
+#include "menu_item.h"
+#include "win11_menu.h"
 
 #pragma comment(lib, "shlwapi.lib")
+
+// UTF-8 转 UTF-16
+inline std::wstring toWide(const std::string& value) {
+    if (value.empty())
+        return {};
+
+    int size = MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, nullptr, 0);
+
+    if (size <= 0)
+        return {};
+
+    std::wstring result(size, L'\0');
+
+    MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, result.data(), size);
+
+    result.resize(size - 1);
+
+    return result;
+}
 
 // ============================================================
 // 子菜单 Command
@@ -16,7 +37,8 @@
 
 class SubCommand : public IExplorerCommand {
 public:
-    explicit SubCommand(const char* title, const char* command) : title_(title), command_(command) {}
+    explicit SubCommand(const std::wstring& title, const std::wstring& command)
+        : title_(title), command_(command) {}
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
         if (!ppv)
@@ -50,7 +72,7 @@ public:
         if (!title)
             return E_POINTER;
 
-        return SHStrDupA(title_.c_str(), title);
+        return SHStrDupW(title_.c_str(), title);
     }
 
     HRESULT STDMETHODCALLTYPE GetIcon(IShellItemArray*, LPWSTR* icon) override {
@@ -89,7 +111,10 @@ public:
         if (!items)
             return E_INVALIDARG;
 
-        std::string command = parseCommand(items);
+        std::wstring command = parseCommand(items);
+
+        if (command.empty())
+            return E_INVALIDARG;
 
         if (!execute(command))
             return HRESULT_FROM_WIN32(GetLastError());
@@ -115,16 +140,16 @@ public:
 
 private:
     ULONG refCount_ = 1;
-    std::string title_;
-    std::string command_;
+    std::wstring title_;
+    std::wstring command_;
 
-    bool execute(std::string& command) {
-        STARTUPINFOA si{};
+    bool execute(std::wstring& command) {
+        STARTUPINFOW si{};
         si.cb = sizeof(si);
 
         PROCESS_INFORMATION pi{};
 
-        BOOL result = CreateProcessA(
+        BOOL result = CreateProcessW(
             nullptr,
             command.data(),
             nullptr,
@@ -146,7 +171,7 @@ private:
         return true;
     }
 
-    std::string parseCommand(IShellItemArray* items) {
+    std::wstring parseCommand(IShellItemArray* items) {
         if (!items)
             return {};
 
@@ -155,7 +180,7 @@ private:
         if (FAILED(items->GetCount(&count)))
             return {};
 
-        std::vector<std::string> paths;
+        std::vector<std::wstring> paths;
 
         for (DWORD i = 0; i < count; ++i) {
             IShellItem* item = nullptr;
@@ -166,33 +191,7 @@ private:
             PWSTR widePath = nullptr;
 
             if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &widePath))) {
-                int size = WideCharToMultiByte(
-                    CP_UTF8,
-                    0,
-                    widePath,
-                    -1,
-                    nullptr,
-                    0,
-                    nullptr,
-                    nullptr
-                );
-
-                if (size > 0) {
-                    std::string path(size - 1, '\0');
-
-                    WideCharToMultiByte(
-                        CP_UTF8,
-                        0,
-                        widePath,
-                        -1,
-                        path.data(),
-                        size,
-                        nullptr,
-                        nullptr
-                    );
-
-                    paths.emplace_back(std::move(path));
-                }
+                paths.emplace_back(widePath);
 
                 CoTaskMemFree(widePath);
             }
@@ -200,44 +199,59 @@ private:
             item->Release();
         }
 
-        std::string command = command_;
+        return substitute(command_, paths);
+    }
 
-        auto replaceAll = [](std::string& str,
-                            const std::string& from,
-                            const std::string& to) {
-            if (from.empty())
-                return;
+    // 替换 %1、%2 ... 和 %*，插入的路径不会被再次替换
+    std::wstring substitute(const std::wstring& command, const std::vector<std::wstring>& paths) {
+        std::wstring result;
 
-            size_t pos = 0;
-
-            while ((pos = str.find(from, pos)) != std::string::npos) {
-                str.replace(pos, from.length(), to);
-                pos += to.length();
+        for (size_t i = 0; i < command.size();) {
+            if (command[i] != L'%' || i + 1 >= command.size()) {
+                result += command[i];
+                ++i;
+                continue;
             }
-        };
 
-        // %1, %2, %3 ...
-        for (size_t i = 0; i < paths.size(); ++i) {
-            replaceAll(
-                command,
-                "%" + std::to_string(i + 1),
-                "\"" + paths[i] + "\""
-            );
+            wchar_t next = command[i + 1];
+
+            if (next == L'*') {
+                for (size_t n = 0; n < paths.size(); ++n) {
+                    if (n > 0)
+                        result += L' ';
+
+                    result += quote(paths[n]);
+                }
+
+                i += 2;
+                continue;
+            }
+
+            if (next >= L'0' && next <= L'9') {
+                size_t end = i + 1;
+                size_t value = 0;
+
+                while (end < command.size() && command[end] >= L'0' && command[end] <= L'9') {
+                    value = value * 10 + static_cast<size_t>(command[end] - L'0');
+                    ++end;
+                }
+
+                if (value >= 1 && value <= paths.size()) {
+                    result += quote(paths[value - 1]);
+                    i = end;
+                    continue;
+                }
+            }
+
+            result += command[i];
+            ++i;
         }
 
-        // %*
-        std::string allPaths;
+        return result;
+    }
 
-        for (const auto& path : paths) {
-            if (!allPaths.empty())
-                allPaths += ' ';
-
-            allPaths += "\"" + path + "\"";
-        }
-
-        replaceAll(command, "%*", allPaths);
-
-        return command;
+    std::wstring quote(const std::wstring& value) {
+        return L"\"" + value + L"\"";
     }
 };
 
@@ -249,18 +263,14 @@ private:
 class CommandEnumerator : public IEnumExplorerCommand {
 public:
     CommandEnumerator() {
-        commands_.push_back(new SubCommand(
-            "Open", 
-            R"xxx(powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Hello open %1')")xxx"
-        ));
-        commands_.push_back(new SubCommand(
-            "Open with Notepad",
-            R"xxx(powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Notepad')")xxx"
-        ));
-        commands_.push_back(new SubCommand(
-            "Something else",
-            R"xxx(powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Something else')")xxx"
-        ));
+        std::vector<MenuItem> menu_items = Win11Menu::get_items();
+
+        for (const auto& mi : menu_items) {
+            commands_.push_back(new SubCommand(
+                toWide(mi.label),
+                toWide(mi.command)
+            ));
+        }
     }
 
     ~CommandEnumerator() {
