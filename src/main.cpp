@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
     remove->add_option("--mode,-m", mode, "Windows mode")
         ->required()
         ->check(CLI::IsMember({MODE_WIN10, MODE_WIN11}));
-    remove->add_option("name", target, "Menu label or name")->required();
+    remove->add_option("name", target, "Name")->required();
 
     CLI::App* list = app.add_subcommand("list", "List context menu entries");
     list->add_option("--mode,-m", mode, "Windows mode")
