@@ -1,4 +1,6 @@
+#include <string>
 #include "registry.h"
+#include "utils.h"
 
 bool Registry::exists(HKEY root, const std::string& path) {
     HKEY key;
@@ -33,7 +35,9 @@ bool Registry::setString(HKEY root, const std::string& path, const std::string& 
         return false;
     }
 
-    LONG ret = RegSetValueExA(key, name.empty() ? nullptr : name.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), value.size()+1);
+    std::string ansi_value = Encoding::utf8_to_ansi(value);
+
+    LONG ret = RegSetValueExA(key, name.empty() ? nullptr : name.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(ansi_value.c_str()), value.size() + 1);
 
     RegCloseKey(key);
 
@@ -58,7 +62,9 @@ std::optional<std::string> Registry::getString(HKEY root, const std::string& pat
     if (ret != ERROR_SUCCESS)
         return {};
 
-    return std::string(buffer);
+    std::string utf8_value = Encoding::ansi_to_utf8(buffer);
+
+    return utf8_value;
 }
 
 bool Registry::setDWORD(HKEY root, const std::string& path, const std::string& name, DWORD value) {

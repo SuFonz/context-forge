@@ -1,9 +1,11 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 struct MenuItem {
     std::string name;
     std::string label;
-    std::string command;
+    std::string program;
+    std::string args;
 };

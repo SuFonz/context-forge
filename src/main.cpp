@@ -18,63 +18,6 @@ const std::string MODE_WIN11 = "win11";
 #include <windows.h>
 #include <string>
 
-// UTF-8 std::string -> ANSI std::string
-inline std::string Utf8ToAnsi(const std::string& utf8) {
-    if (utf8.empty()) return {};
-
-    // 1. UTF-8 -> UTF-16
-    int wlen = MultiByteToWideChar(
-        CP_UTF8,
-        MB_ERR_INVALID_CHARS,   // 遇到非法 UTF-8 返回失败
-        utf8.data(),
-        static_cast<int>(utf8.size()),
-        nullptr,
-        0
-    );
-    if (wlen <= 0) {
-        return {}; // 或者抛异常，看你的错误处理策略
-    }
-
-    std::wstring wstr(wlen, L'\0');
-    MultiByteToWideChar(
-        CP_UTF8,
-        MB_ERR_INVALID_CHARS,
-        utf8.data(),
-        static_cast<int>(utf8.size()),
-        &wstr[0],
-        wlen
-    );
-
-    // 2. UTF-16 -> ANSI (CP_ACP，中文 Windows 即 GBK)
-    int alen = WideCharToMultiByte(
-        CP_ACP,
-        0,
-        wstr.data(),
-        wlen,
-        nullptr,
-        0,
-        nullptr,
-        nullptr
-    );
-    if (alen <= 0) {
-        return {};
-    }
-
-    std::string ansi(alen, '\0');
-    WideCharToMultiByte(
-        CP_ACP,
-        0,
-        wstr.data(),
-        wlen,
-        &ansi[0],
-        alen,
-        nullptr,
-        nullptr
-    );
-
-    return ansi;
-}
-
 bool appx_package_installed() {
     if (!Appx::is_installed(PROJECT_APPX_PACKAGE_NAME)) {
         std::cout << "Appx package is not installed." << std::endl;
@@ -122,9 +65,9 @@ std::vector<MenuItem> get_entries(const std::string& mode) {
 // 打印菜单项
 void print_entries(const std::vector<MenuItem>& items) {
     for (const MenuItem& item : items) {
-        std::cout << std::format("name:    {}", Utf8ToAnsi(item.name)) << std::endl;
-        std::cout << std::format("label:   {}", Utf8ToAnsi(item.label)) << std::endl;
-        std::cout << std::format("command: {}", Utf8ToAnsi(item.command)) << std::endl;
+        std::cout << std::format("name:    {}", Encoding::utf8_to_ansi(item.name)) << std::endl;
+        std::cout << std::format("label:   {}", Encoding::utf8_to_ansi(item.label)) << std::endl;
+        std::cout << std::format("command: {}", Encoding::utf8_to_ansi(item.program)) << std::endl;
         std::cout << std::endl;
     }
 }
@@ -132,13 +75,14 @@ void print_entries(const std::vector<MenuItem>& items) {
 int main(int argc, char* argv[]) {
     CLI::App app{PROJECT_NAME};
 
-    argv = app.ensure_utf8(argv); 
+    argv = app.ensure_utf8(argv);
 
     app.require_subcommand(1);
 
     std::string mode;
     std::string label;
-    std::string command;
+    std::string program;
+    std::string args;
     std::string target;
 
     CLI::App* add = app.add_subcommand("add", "Add a context menu entry");
@@ -146,7 +90,8 @@ int main(int argc, char* argv[]) {
         ->required()
         ->check(CLI::IsMember({MODE_WIN10, MODE_WIN11}));
     add->add_option("label", label, "Menu label")->required();
-    add->add_option("command", command, "Command to execute")->required();
+    add->add_option("program", program, "Program to execute")->required();
+    add->add_option("args", args, "Arguments passed to the program (supports %1, %*, ...)")->required();
 
     CLI::App* remove = app.add_subcommand("remove", "Remove a context menu entry");
     remove->add_option("--mode,-m", mode, "Windows mode")
@@ -165,7 +110,7 @@ int main(int argc, char* argv[]) {
         MenuItem item;
         item.name = std::format("{}_{}", PROJECT_NAME, Gen::random_string(8));
         item.label = label;
-        item.command = command;
+        item.program = std::format("\"{}\" \"{}\"", program, args);
 
         if (!add_entry(mode, item)) {
             std::cerr << std::format("Failed to add entry: {}", label) << std::endl;

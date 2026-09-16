@@ -33,7 +33,9 @@ bool Win10Menu::add_menu(MenuItem item) {
         return false;
     }
 
-    if (!Registry::setString(HKEY_CURRENT_USER, command_path, std::string(), item.command)) {
+    std::string command = std::format("{} {}", item.program, item.args);
+
+    if (!Registry::setString(HKEY_CURRENT_USER, command_path, std::string(), command)) {
         return false;
     }
 
@@ -89,7 +91,7 @@ std::vector<MenuItem> Win10Menu::get_items() {
                 std::optional<std::string> cmd = Registry::getString(HKEY_CURRENT_USER, cmd_path, {});
 
                 if (cmd)
-                    item.command = *cmd;
+                    item.program = *cmd;
             }
 
             return item;

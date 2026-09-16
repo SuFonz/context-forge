@@ -91,7 +91,8 @@ void Win11Menu::write_config(const std::filesystem::path& path, std::vector<Menu
         data["items"].push_back({
             {"name", mi.name},
             {"label", mi.label},
-            {"command", mi.command},
+            {"program", mi.program},
+            {"args", mi.args},
         });
     }
 
@@ -116,7 +117,8 @@ std::vector<MenuItem> Win11Menu::items_from_json(std::string json_text) {
             MenuItem mn_item = {
                 .name = item["name"],
                 .label = item["label"],
-                .command = item["command"],
+                .program = item["program"],
+                .args = item["args"],
             };
 
             menu_items.push_back(mn_item);

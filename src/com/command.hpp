@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <windows.h>
 #include <processthreadsapi.h>
 #include <shobjidl.h>
@@ -37,8 +38,8 @@ inline std::wstring toWide(const std::string& value) {
 
 class SubCommand : public IExplorerCommand {
 public:
-    explicit SubCommand(const std::wstring& title, const std::wstring& command)
-        : title_(title), command_(command) {}
+    explicit SubCommand(const std::wstring& title, const std::wstring& program, const std::wstring& args)
+        : title_(title), program_(program), args_(args) {}
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
         if (!ppv)
@@ -141,7 +142,8 @@ public:
 private:
     ULONG refCount_ = 1;
     std::wstring title_;
-    std::wstring command_;
+    std::wstring program_;
+    std::wstring args_;
 
     bool execute(std::wstring& command) {
         STARTUPINFOW si{};
@@ -199,7 +201,9 @@ private:
             item->Release();
         }
 
-        return substitute(command_, paths);
+        std::wstring command = std::format(L"{} {}", program_, args_);
+
+        return substitute(command, paths);
     }
 
     // 替换 %1、%2 ... 和 %*，插入的路径不会被再次替换
@@ -268,7 +272,8 @@ public:
         for (const auto& mi : menu_items) {
             commands_.push_back(new SubCommand(
                 toWide(mi.label),
-                toWide(mi.command)
+                toWide(mi.program),
+                toWide(mi.args)
             ));
         }
     }

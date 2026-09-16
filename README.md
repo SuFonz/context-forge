@@ -11,9 +11,10 @@ ContextForge supports two different menu backends:
   exposed through a COM `IExplorerCommand` handler that is packaged as a lightweight MSIX/AppX
   package.
 
-Each entry has a label and a command. The command may contain `%1`, `%2`, ... and `%*` placeholders,
-which are replaced with the paths of the selected files/folders when the entry is invoked. `%*`
-expands to all selected paths at once.
+Each entry has a label, a program, and arguments. The arguments may contain `%1`, `%2`, ... and `%*`
+placeholders, which are replaced with the paths of the selected files/folders when the entry is
+invoked. `%*` expands to all selected paths at once. The program path is quoted automatically, so it
+does not need to be quoted on the command line.
 
 ## Requirements
 
@@ -97,16 +98,25 @@ Add an entry:
 
 ```powershell
 # Windows 11 modern menu
-.\bin\ContextForge.exe add --mode win11 "Open in VS Code" "code %1"
+.\bin\ContextForge.exe add --mode win11 "Open in VS Code" "code" "%1"
 
 # Classic shell menu
-.\bin\ContextForge.exe add --mode win10 "Open in VS Code" "code %1"
+.\bin\ContextForge.exe add --mode win10 "Open in VS Code" "code" "%1"
 ```
 
-If the program lives somewhere other than your `PATH`, it is not required to quote it:
+The last argument holds the arguments passed to the program. Use `%1 %2` to forward individual
+selected paths, or `%*` to forward all selected paths at once:
+
+```powershell
+.\bin\ContextForge.exe add --mode win10 "this is a label" "path/to/program.exe" "%1 %2"
+.\bin\ContextForge.exe add --mode win10 "this is a label" "path/to/program.exe" "%*"
+```
+
+If the program lives somewhere other than your `PATH`, just pass its path — quoting is handled for
+you:
 
 ```bat
-.\bin\ContextForge.exe add --mode win11 "Open in Program" "D:\Program Files\program\program.exe %*"
+.\bin\ContextForge.exe add --mode win11 "Open in Program" "D:\Program Files\program\program.exe" "%*"
 ```
 
 List all entries of a mode:
@@ -130,7 +140,8 @@ name before removing.
 | ---------- | ----------------- | ---------------------------------------- |
 | `add`      | `--mode, -m`      | Menu backend: `win10` or `win11`         |
 | `add`      | `label`           | Text shown in the context menu           |
-| `add`      | `command`         | Command to run (supports `%1`, `%*`, ...)|
+| `add`      | `program`         | Program to run (quoted automatically)    |
+| `add`      | `args`            | Arguments for the program (supports `%1`, `%*`, ...)|
 | `remove`   | `--mode, -m`      | Menu backend: `win10` or `win11`         |
 | `remove`   | `name`            | Entry name as returned by `list`         |
 | `list`     | `--mode, -m`      | Menu backend: `win10` or `win11`         |
@@ -140,8 +151,8 @@ name before removing.
 - `win10` entries live directly in the registry under `HKCU\Software\Classes\*\shell`.
 - `win11` entries are stored in `win11_menu.json` next to the executable (created on first use). The
   packaged `ContextForgeCOM.dll` implements `IExplorerCommand`; `EnumSubCommands` reads the JSON file
-  and builds one submenu item per entry, replacing the placeholders in `command` with the selected
-  paths before launching it.
+  and builds one submenu item per entry, replacing the placeholders in `args` with the selected paths
+  before launching `program`.
 
 ## License
 
