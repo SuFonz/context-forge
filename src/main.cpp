@@ -67,7 +67,18 @@ void print_entries(const std::vector<MenuItem>& items) {
     for (const MenuItem& item : items) {
         std::cout << std::format("name:    {}", Encoding::utf8_to_ansi(item.name)) << std::endl;
         std::cout << std::format("label:   {}", Encoding::utf8_to_ansi(item.label)) << std::endl;
-        std::cout << std::format("command: {}", Encoding::utf8_to_ansi(item.program)) << std::endl;
+        std::cout << std::format("program: {}", Encoding::utf8_to_ansi(item.program)) << std::endl;
+
+        std::string args;
+
+        for (const std::string& arg : item.args) {
+            if (!args.empty())
+                args += ' ';
+
+            args += Encoding::utf8_to_ansi(arg);
+        }
+
+        std::cout << std::format("args:    {}", args) << std::endl;
         std::cout << std::endl;
     }
 }
@@ -82,22 +93,22 @@ int main(int argc, char* argv[]) {
     std::string mode;
     std::string label;
     std::string program;
-    std::string args;
+    std::vector<std::string> args;
     std::string target;
 
     CLI::App* add = app.add_subcommand("add", "Add a context menu entry");
     add->add_option("--mode,-m", mode, "Windows mode")
         ->required()
         ->check(CLI::IsMember({MODE_WIN10, MODE_WIN11}));
-    add->add_option("label", label, "Menu label")->required();
-    add->add_option("program", program, "Program to execute")->required();
-    add->add_option("args", args, "Arguments passed to the program (supports %1, %*, ...)")->required();
+    add->add_option("--label", label, "Menu label")->required();
+    add->add_option("--program", program, "Program to execute")->required();
+    add->add_option("--args", args, "Arguments passed to the program (supports %1, %2, ...)")->required();
 
     CLI::App* remove = app.add_subcommand("remove", "Remove a context menu entry");
     remove->add_option("--mode,-m", mode, "Windows mode")
         ->required()
         ->check(CLI::IsMember({MODE_WIN10, MODE_WIN11}));
-    remove->add_option("name", target, "Name")->required();
+    remove->add_option("--name", target, "Name")->required();
 
     CLI::App* list = app.add_subcommand("list", "List context menu entries");
     list->add_option("--mode,-m", mode, "Windows mode")
@@ -110,7 +121,10 @@ int main(int argc, char* argv[]) {
         MenuItem item;
         item.name = std::format("{}_{}", PROJECT_NAME, Gen::random_string(8));
         item.label = label;
-        item.program = std::format("\"{}\" \"{}\"", program, args);
+        item.program = std::format("\"{}\"", program);
+
+        for (const std::string& arg : args)
+            item.args.push_back(std::format("\"{}\"", arg));
 
         if (!add_entry(mode, item)) {
             std::cerr << std::format("Failed to add entry: {}", label) << std::endl;

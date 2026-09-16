@@ -32,6 +32,20 @@ inline std::wstring toWide(const std::string& value) {
     return result;
 }
 
+// UTF-8 字符串数组转 UTF-16（用空格连接）
+inline std::wstring toWide(const std::vector<std::string>& values) {
+    std::wstring result;
+
+    for (const std::string& value : values) {
+        if (!result.empty())
+            result += L' ';
+
+        result += toWide(value);
+    }
+
+    return result;
+}
+
 // ============================================================
 // 子菜单 Command
 // ============================================================
@@ -201,12 +215,14 @@ private:
             item->Release();
         }
 
-        std::wstring command = std::format(L"{} {}", program_, args_);
+        std::wstring command = args_.empty()
+            ? program_
+            : std::format(L"{} {}", program_, args_);
 
         return substitute(command, paths);
     }
 
-    // 替换 %1、%2 ... 和 %*，插入的路径不会被再次替换
+    // 替换 %1、%2 ...，插入的路径不会被再次替换
     std::wstring substitute(const std::wstring& command, const std::vector<std::wstring>& paths) {
         std::wstring result;
 
@@ -219,18 +235,6 @@ private:
 
             wchar_t next = command[i + 1];
 
-            if (next == L'*') {
-                for (size_t n = 0; n < paths.size(); ++n) {
-                    if (n > 0)
-                        result += L' ';
-
-                    result += quote(paths[n]);
-                }
-
-                i += 2;
-                continue;
-            }
-
             if (next >= L'0' && next <= L'9') {
                 size_t end = i + 1;
                 size_t value = 0;
@@ -241,7 +245,7 @@ private:
                 }
 
                 if (value >= 1 && value <= paths.size()) {
-                    result += quote(paths[value - 1]);
+                    result += paths[value - 1];
                     i = end;
                     continue;
                 }
@@ -252,10 +256,6 @@ private:
         }
 
         return result;
-    }
-
-    std::wstring quote(const std::wstring& value) {
-        return L"\"" + value + L"\"";
     }
 };
 

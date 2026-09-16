@@ -33,7 +33,9 @@ bool Win10Menu::add_menu(MenuItem item) {
         return false;
     }
 
-    std::string command = std::format("{} {}", item.program, item.args);
+    std::string command = item.args.empty()
+        ? std::format("{}", item.program)
+        : std::format("{} {}", item.program, StringUtils::join(item.args, " "));
 
     if (!Registry::setString(HKEY_CURRENT_USER, command_path, std::string(), command)) {
         return false;
@@ -90,8 +92,28 @@ std::vector<MenuItem> Win10Menu::get_items() {
             if (Registry::exists(HKEY_CURRENT_USER, cmd_path)) {
                 std::optional<std::string> cmd = Registry::getString(HKEY_CURRENT_USER, cmd_path, {});
 
-                if (cmd)
-                    item.program = *cmd;
+                if (cmd) {
+                    std::string command = *cmd;
+
+                    std::vector<std::string> tokens = StringUtils::split(command, ' ');
+                    std::vector<std::string> parts;
+
+                    // 双引号内部的空格不作为分隔符，
+                    // 例如 "C:\Program Files\program.exe" "%1" "%2"
+                    for (const std::string& token : tokens) {
+                        if (!parts.empty() && parts.back().starts_with('"') && !parts.back().ends_with('"')) {
+                            parts.back() += " " + token;
+                        } else if (!token.empty()) {
+                            parts.push_back(token);
+                        }
+                    }
+
+                    if (!parts.empty()) {
+                        item.program = parts.front();
+                        item.args.assign(parts.begin() + 1, parts.end());
+                    }
+                }
+
             }
 
             return item;

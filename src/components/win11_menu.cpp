@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 #include "win11_menu.h"
 #include "menu_item.h"
+#include "nlohmann/json_fwd.hpp"
 
 // 配置目录：模块（EXE / DLL）所在目录，保证不受当前工作目录影响
 std::filesystem::path Win11Menu::config_dir() {
@@ -83,7 +84,7 @@ std::string Win11Menu::read_config(const std::filesystem::path& path) {
 }
 
 void Win11Menu::write_config(const std::filesystem::path& path, std::vector<MenuItem> menu_items) {
-    nlohmann::json data;
+    nlohmann::ordered_json data;
 
     data["items"] = nlohmann::json::array();
 
@@ -104,7 +105,7 @@ void Win11Menu::write_config(const std::filesystem::path& path, std::vector<Menu
 std::vector<MenuItem> Win11Menu::items_from_json(std::string json_text) {
     std::vector<MenuItem> menu_items;
 
-    nlohmann::json data;
+    nlohmann::ordered_json data;
 
     if (json_text.empty()) {
         return std::vector<MenuItem>();
@@ -115,10 +116,10 @@ std::vector<MenuItem> Win11Menu::items_from_json(std::string json_text) {
 
         for (const auto& item : data["items"]) {
             MenuItem mn_item = {
-                .name = item["name"],
-                .label = item["label"],
-                .program = item["program"],
-                .args = item["args"],
+                .name = item.value("name", std::string()),
+                .label = item.value("label", std::string()),
+                .program = item.value("program", std::string()),
+                .args = item.value("args", std::vector<std::string>()),
             };
 
             menu_items.push_back(mn_item);

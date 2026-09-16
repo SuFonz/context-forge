@@ -105,62 +105,93 @@ std::string Encoding::utf8_to_ansi(const std::string& utf8) {
 }
 
 std::string Encoding::ansi_to_utf8(const std::string& ansi) {
-        if (ansi.empty())
-            return {};
+    if (ansi.empty())
+        return {};
 
-        int wideSize = MultiByteToWideChar(
+    int wideSize = MultiByteToWideChar(
+        CP_ACP,
+        0,
+        ansi.data(),
+        static_cast<int>(ansi.size()),
+        nullptr,
+        0
+    );
+
+    if (wideSize <= 0)
+        return {};
+
+    std::wstring wide(wideSize, L'\0');
+
+    if (MultiByteToWideChar(
             CP_ACP,
             0,
             ansi.data(),
             static_cast<int>(ansi.size()),
-            nullptr,
-            0
-        );
+            wide.data(),
+            wideSize
+        ) <= 0) {
+        return {};
+    }
 
-        if (wideSize <= 0)
-            return {};
+    int utf8Size = WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        wide.data(),
+        wideSize,
+        nullptr,
+        0,
+        nullptr,
+        nullptr
+    );
 
-        std::wstring wide(wideSize, L'\0');
+    if (utf8Size <= 0)
+        return {};
 
-        if (MultiByteToWideChar(
-                CP_ACP,
-                0,
-                ansi.data(),
-                static_cast<int>(ansi.size()),
-                wide.data(),
-                wideSize
-            ) <= 0) {
-            return {};
-        }
+    std::string utf8(utf8Size, '\0');
 
-        int utf8Size = WideCharToMultiByte(
+    if (WideCharToMultiByte(
             CP_UTF8,
             0,
             wide.data(),
             wideSize,
-            nullptr,
-            0,
+            utf8.data(),
+            utf8Size,
             nullptr,
             nullptr
-        );
-
-        if (utf8Size <= 0)
-            return {};
-
-        std::string utf8(utf8Size, '\0');
-
-        if (WideCharToMultiByte(
-                CP_UTF8,
-                0,
-                wide.data(),
-                wideSize,
-                utf8.data(),
-                utf8Size,
-                nullptr,
-                nullptr
-            ) <= 0) {
-            return {};
-        }
-
-        return utf8;
+        ) <= 0) {
+        return {};
     }
+
+    return utf8;
+}
+
+std::vector<std::string> StringUtils::split(const std::string& str, char delimiter){
+    std::vector<std::string> result;
+    std::string current;
+
+    for (char ch : str) {
+        if (ch == delimiter) {
+            result.push_back(current);
+            current.clear();
+        } else {
+            current += ch;
+        }
+    }
+
+    result.push_back(current);
+
+    return result;
+}
+
+std::string StringUtils::join(const std::vector<std::string>& items, const std::string& delimiter) {
+    std::string result;
+
+    for (size_t i = 0; i < items.size(); ++i) {
+        if (i > 0)
+            result += delimiter;
+
+        result += items[i];
+    }
+
+    return result;
+}

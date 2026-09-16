@@ -37,7 +37,7 @@ bool Registry::setString(HKEY root, const std::string& path, const std::string& 
 
     std::string ansi_value = Encoding::utf8_to_ansi(value);
 
-    LONG ret = RegSetValueExA(key, name.empty() ? nullptr : name.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(ansi_value.c_str()), value.size() + 1);
+    LONG ret = RegSetValueExA(key, name.empty() ? nullptr : name.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(ansi_value.c_str()), static_cast<DWORD>(ansi_value.size()) + 1);
 
     RegCloseKey(key);
 
