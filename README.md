@@ -20,8 +20,10 @@ stored, so you do not have to add quotes yourself.
 
 - Windows 10 1809+ / Windows 11
 - [CMake](https://cmake.org/) 3.16 or newer
-- A C++20 compiler — [Clang/LLVM](https://clang.llvm.org/) 17+ targeting MinGW-w64
-  (e.g. [LLVM-MinGW](https://github.com/mstorsjo/llvm-mingw) or MSYS2's `clang`)
+- A C++20 compiler — [Clang/LLVM](https://clang.llvm.org/) 17+ targeting MSVC, i.e. the official
+  `clang+llvm-*-x86_64-pc-windows-msvc` Windows release, together with the Visual Studio C++ build
+  tools and the Windows SDK (the project uses C++/WinRT headers and MSVC-specific linker pragmas, so
+  MinGW-based toolchains such as LLVM-MinGW or MSYS2's `clang` are not supported)
 - [Ninja](https://ninja-build.org/)
 - [Git](https://git-scm.com/install/)
 
@@ -129,7 +131,7 @@ List all entries of a mode:
 Remove an entry by its name:
 
 ```powershell
-.\bin\ContextForge.exe remove --mode win11 ContextForge_xxxxxxxx
+.\bin\ContextForge.exe remove --mode win11 --name ContextForge_xxxxxxxx
 ```
 
 `add` generates a unique name (`ContextForge_` plus a random suffix); use `list` to obtain the exact
@@ -144,7 +146,7 @@ name before removing.
 | `add`      | `--program`       | Program to run (quoted automatically)    |
 | `add`      | `--args`          | One or more arguments for the program (supports `%1` ... `%9`)|
 | `remove`   | `--mode, -m`      | Menu backend: `win10` or `win11`         |
-| `remove`   | `name`            | Entry name as returned by `list` (positional) |
+| `remove`   | `--name`          | Entry name as returned by `list`         |
 | `list`     | `--mode, -m`      | Menu backend: `win10` or `win11`         |
 
 ## How it works
