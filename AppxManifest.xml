@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+  xmlns:desktop10="http://schemas.microsoft.com/appx/manifest/desktop/windows10/10"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  IgnorableNamespaces="uap uap3 desktop desktop4 desktop5 desktop10 com rescap">
+	
+  <Identity
+    Name="d585db51-2e03-4e89-9b4c-080885988226"
+    Publisher="CN=ContextForge"
+    Version="1.0.0.0" />
+
+  <Properties>
+    <DisplayName>ContextForge</DisplayName>
+    <PublisherDisplayName>ContextForge</PublisherDisplayName>
+    <Logo>logo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="zh-cn"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="ContextForge.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="ContextForge"
+        Description="ContextForge is a small command-line tool that adds custom entries to the Windows File Explorer context menu."
+        BackgroundColor="transparent"
+        AppListEntry="none"
+        Square150x150Logo="logo.png"
+        Square44x44Logo="logo.png">
+        <uap:DefaultTile Wide310x150Logo="logo.png" />
+        <uap:SplashScreen Image="logo.png" />
+      </uap:VisualElements>
+		<Extensions>
+			<desktop4:Extension Category="windows.fileExplorerContextMenus">
+				<desktop4:FileExplorerContextMenus>
+					<desktop5:ItemType Type="Directory"  >
+						<desktop5:Verb Id="CustomMenu" Clsid="3234011f-8bfa-41b4-9ddf-35247c95da5b" />
+					</desktop5:ItemType>
+					<desktop5:ItemType Type="*"  >
+						<desktop5:Verb Id="CustomMenu" Clsid="3234011f-8bfa-41b4-9ddf-35247c95da5b" />
+					</desktop5:ItemType>
+					<desktop5:ItemType Type="Directory\Background">
+						<desktop5:Verb Id="CustomMenu" Clsid="3234011f-8bfa-41b4-9ddf-35247c95da5b" />
+					</desktop5:ItemType>
+				</desktop4:FileExplorerContextMenus>
+			</desktop4:Extension>
+			<com:Extension Category="windows.comServer">
+				<com:ComServer>
+					<com:SurrogateServer DisplayName="ContextForgeCOM">
+						<com:Class Id="3234011f-8bfa-41b4-9ddf-35247c95da5b" Path="ContextForgeCOM.dll" ThreadingModel="STA"/>
+					</com:SurrogateServer>
+				</com:ComServer>
+			</com:Extension>
+		</Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
+

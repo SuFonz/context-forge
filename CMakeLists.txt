@@ -78,3 +78,14 @@ set_target_properties(ContextForgeCOM PROPERTIES
 target_compile_options(ContextForgeCOM PRIVATE
     -finput-charset=UTF-8
 )
+
+# Copy AppxManifest.xml
+add_custom_command(TARGET ContextForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/AppxManifest.xml
+    ${CMAKE_CURRENT_SOURCE_DIR}/bin/AppxManifest.xml
+
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/logo.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/bin/logo.png
+)

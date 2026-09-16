@@ -2,10 +2,15 @@
 #include <windows.h>
 
 const std::string PROJECT_NAME = "ContextForge";
-const std::string PROJECT_APPX_PACKAGE_NAME = "00000000-1111-2222-3333-444444444444";
+
+// Generated using PowerShell's "[guid]::NewGuid()" command.
+const std::string PROJECT_APPX_PACKAGE_NAME = "d585db51-2e03-4e89-9b4c-080885988226";
+
+// Generated using PowerShell's "[guid]::NewGuid()" command.
+// 3234011f-8bfa-41b4-9ddf-35247c95da5b
 inline const GUID PROJECT_CLSID = {
-    0x12345678,
-    0x1234,
-    0x5678,
-    {0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef}
+    0x3234011f,
+    0x8bfa,
+    0x41b4,
+    {0x9d, 0xdf, 0x35, 0x24, 0x7c, 0x95, 0xda, 0x5b}
 };
