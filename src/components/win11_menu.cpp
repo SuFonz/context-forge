@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -121,7 +122,8 @@ std::vector<MenuItem> Win11Menu::items_from_json(std::string json_text) {
             menu_items.push_back(mn_item);
         }
 
-    } catch (const nlohmann::json::exception&) {
+    } catch (const nlohmann::json::exception& e) {
+        std::cerr << "JSON parse error: " << e.what() << std::endl;
         return std::vector<MenuItem>();
     }
 
