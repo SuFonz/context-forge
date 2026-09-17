@@ -36,7 +36,7 @@
 
   <Applications>
     <Application Id="App"
-      Executable="ContextForge.exe"
+      Executable="contextforge.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="ContextForge"
@@ -65,7 +65,7 @@
 			<com:Extension Category="windows.comServer">
 				<com:ComServer>
 					<com:SurrogateServer DisplayName="ContextForgeCOM">
-						<com:Class Id="3234011f-8bfa-41b4-9ddf-35247c95da5b" Path="ContextForgeCOM.dll" ThreadingModel="STA"/>
+						<com:Class Id="3234011f-8bfa-41b4-9ddf-35247c95da5b" Path="contextforge.dll" ThreadingModel="STA"/>
 					</com:SurrogateServer>
 				</com:ComServer>
 			</com:Extension>
