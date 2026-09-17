@@ -41,8 +41,8 @@ your `PATH`; CMake otherwise picks it up automatically.
 
 The build produces two artifacts in the `bin/` directory:
 
-- `ContextForge.exe` – the command-line tool
-- `ContextForgeCOM.dll` – the COM server used by the Windows 11 menu
+- `contextforge.exe` – the command-line tool
+- `contextforge.dll` – the COM server used by the Windows 11 menu
 
 `AppxManifest.xml` and `logo.png` are copied into `bin/` automatically, so the folder is ready to be
 registered as an AppX package.
@@ -100,10 +100,10 @@ Add an entry — `--mode`, `--label`, `--program` and `--args` are all required:
 
 ```powershell
 # Windows 11 modern menu
-.\bin\ContextForge.exe add --mode win11 --label "Open in VS Code" --program "code" --args "%1"
+.\bin\contextforge.exe add --mode win11 --label "Open in VS Code" --program "code" --args "%1"
 
 # Classic shell menu
-.\bin\ContextForge.exe add --mode win10 --label "Open in VS Code" --program "code" --args "%1"
+.\bin\contextforge.exe add --mode win10 --label "Open in VS Code" --program "code" --args "%1"
 ```
 
 `--args` takes one or more values; each value becomes one argument of the program. The values may
@@ -111,7 +111,7 @@ contain `%1`, `%2`, ... placeholders, which are replaced with the paths of the s
 files/folders. Pass one value per placeholder:
 
 ```powershell
-.\bin\ContextForge.exe add --mode win10 --label "this is a label" --program "path/to/program.exe" --args "%1" "%2"
+.\bin\contextforge.exe add --mode win10 --label "this is a label" --program "path/to/program.exe" --args "%1" "%2"
 ```
 
 If the program lives somewhere other than your `PATH`, just pass its path — the tool adds the quotes
@@ -119,19 +119,19 @@ that end up in the stored command, so you only need the shell-level quoting Powe
 values containing spaces:
 
 ```powershell
-.\bin\ContextForge.exe add --mode win11 --label "Open in Program" --program "D:\Program Files\program\program.exe" --args "%1"
+.\bin\contextforge.exe add --mode win11 --label "Open in Program" --program "D:\Program Files\program\program.exe" --args "%1"
 ```
 
 List all entries of a mode:
 
 ```powershell
-.\bin\ContextForge.exe list --mode win11
+.\bin\contextforge.exe list --mode win11
 ```
 
 Remove an entry by its name:
 
 ```powershell
-.\bin\ContextForge.exe remove --mode win11 --name ContextForge_xxxxxxxx
+.\bin\contextforge.exe remove --mode win11 --name ContextForge_xxxxxxxx
 ```
 
 `add` generates a unique name (`ContextForge_` plus a random suffix); use `list` to obtain the exact
@@ -153,7 +153,7 @@ name before removing.
 
 - `win10` entries live directly in the registry under `HKCU\Software\Classes\*\shell`.
 - `win11` entries are stored in `win11_menu.json` next to the executable (created on first use). The
-  packaged `ContextForgeCOM.dll` implements `IExplorerCommand`; `EnumSubCommands` reads the JSON file
+  packaged `contextforge.dll` implements `IExplorerCommand`; `EnumSubCommands` reads the JSON file
   and builds one submenu item per entry, replacing the placeholders in `args` with the selected paths
   before launching `program`.
 
